@@ -75,6 +75,13 @@ module.exports = function (grunt) {
         path.join(paths.installerPath, '/installerbase')
       ]
     },
+		mkdir: {
+		  all: {
+		    options: {
+		      create: [path.join(paths.resourcePath, 'data')]
+		    }
+		  }
+		},
     copy: {
       qt: {
         files: [
@@ -123,7 +130,7 @@ module.exports = function (grunt) {
       },
       linuxBuild: {
         // Target-specific file/dir lists and/or options go here.
-        src: ['*']
+        src: ['*', 'installer/**/*']
       }
     },
     execute: {
@@ -243,11 +250,12 @@ module.exports = function (grunt) {
 
   grunt.registerTask('linux', [
     'clean:qtData',
+		'mkdir:all',
     'shell:cloneDltViewer',
     'copy:qt',
+    'chmod:linuxBuild',
     'execute:findDependency',
     'execute:addData',
-    'chmod:linuxBuild',
     'shell:linuxBuild',
     'execute:moveInstaller'
   ]);
