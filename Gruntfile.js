@@ -119,11 +119,11 @@ module.exports = function (grunt) {
     },
     chmod: {
       options: {
-        mode: '777'
+        mode: '755'
       },
       linuxBuild: {
         // Target-specific file/dir lists and/or options go here.
-        src: ['installer/**/*']
+        src: ['*']
       }
     },
     execute: {
