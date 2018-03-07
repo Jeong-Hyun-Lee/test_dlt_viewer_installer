@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package>
+    <DisplayName>Dlt Viewer</DisplayName>
+    <Description></Description>
+    <Version>0.0.1</Version>
+    <ReleaseDate><%= releasedate %></ReleaseDate>
+    <Default>true</Default>
+    <RequiresAdminRights>true</RequiresAdminRights>
+</Package>

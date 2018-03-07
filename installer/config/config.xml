@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Installer>
+    <Name>Dlt Viewer</Name>
+    <Version>0.0.1</Version>
+    <Title>Dlt Viewer</Title>
+    <Publisher>GENIVI</Publisher>
+	<ProductUrl>https://at.projects.genivi.org/wiki/display/PROJ/DLT+Viewer+Manual</ProductUrl>
+    <!-- Directory name is used in component.xml -->
+    <StartMenuDir>Dlt Viewer</StartMenuDir>
+    <TargetDir>/opt/DLT Viewer</TargetDir>
+    <ControlScript>installcontroller.qs</ControlScript>
+    <MaintenanceToolName>Uninstall</MaintenanceToolName>
+    <MaintenanceToolIniFile>Uninstall.ini</MaintenanceToolIniFile>
+    <CreateLocalRepository>true</CreateLocalRepository>
+    <WizardStyle>Modern</WizardStyle>
+    <InstallerWindowIcon>logo</InstallerWindowIcon>
+    <InstallerApplicationIcon>logo</InstallerApplicationIcon>
+    <Logo>logo.png</Logo>
+	<WizardDefaultWidth>400</WizardDefaultWidth>
+	<WizardDefaultHeight>300</WizardDefaultHeight>
+</Installer>

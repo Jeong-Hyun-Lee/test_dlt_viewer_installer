@@ -1,0 +1,1 @@
+binarycreator.exe --offline-only -c config/config.xml -v -p packages setup.exe 
