@@ -130,9 +130,9 @@ module.exports = function (grunt) {
       findDependency: {
         call: function (grunt, options, async) {
           var done = async();
-          exec('./linuxdeployqt-continuous-x86_64.AppImage '+ paths.packageDataPath + 'dlt_viewer', {cwd : root}, function(err){
+          exec('./linuxdeployqt-continuous-x86_64.AppImage '+ paths.packageDataPath + 'dlt_viewer', {cwd : paths.root}, function(err){
             if(err)
-              throw new Error('error npm install ObigoCodeHints');
+              throw new Error('error not find dependency ');
             done();
           });
 
