@@ -33,9 +33,11 @@ module.exports = function (grunt) {
 
   var paths = {
     root: process.cwd(),
-    packageDataPath: 'installer/packages/dlt_viewer/data/',
-    packageXmlPath: 'installer/packages/dlt_viewer/meta/',
-    configXmlPath: 'installer/config/',
+    distPath: 'dist/',
+    distPackageRootPath: 'dist/package-root/',
+    configPath: 'dist/package-root/config/',
+    packageDataPath: 'dist/package-root/packages/dlt_viewer/data/',
+    packageMetaPath: 'dist/package-root/packages/dlt_viewer/meta/',
     templatePath: 'template/',
     resourcePath: function () {
       if (process.platform === 'win32') {
@@ -47,7 +49,7 @@ module.exports = function (grunt) {
       }
     }(),
     installerPath: 'installer/',
-    resultPath: 'build_result/'
+    resultPath: path.join('build_result', process.platform)
   };
 
   // load dependencies
@@ -65,16 +67,8 @@ module.exports = function (grunt) {
     pkg: grunt.file.readJSON('package.json'),
     clean: {
       qtData: [
-        paths.packageDataPath,
         paths.resultPath,
-        path.join(paths.configXmlPath, 'config.xml'),
-        // for Windows
-        path.join(paths.installerPath, '/*.bat'),
-        path.join(paths.installerPath, '/*.exe'),
-        // for Linux, Mac
-        path.join(paths.installerPath, '/*.sh'),
-        path.join(paths.installerPath, '/binarycreator'),
-        path.join(paths.installerPath, '/installerbase')
+        paths.distPath
       ]
     },
 		mkdir: {
@@ -89,15 +83,9 @@ module.exports = function (grunt) {
         files: [
           {
             expand: true,
-            cwd: paths.templatePath,
-            src: 'package.xml',
-            dest: paths.packageXmlPath
-          },
-          {
-            expand: true,
-            cwd: paths.templatePath,
-            src: ['config.xml'],
-            dest: paths.configXmlPath
+            cwd: paths.installerPath,
+            src: ['**/**'],
+            dest: paths.distPath
           },
           {
             expand: true,
@@ -115,7 +103,7 @@ module.exports = function (grunt) {
             expand: true,
             cwd: paths.resourcePath,
             src: process.platform === 'win32' ? ['installer_build.bat', 'installer_codesign.bat', 'binarycreator.exe', 'installerbase.exe'] : ['binarycreator', 'installerbase', 'installer_build.sh'],
-            dest: paths.installerPath
+            dest: paths.distPackageRootPath
           }
         ]
       },
@@ -136,14 +124,16 @@ module.exports = function (grunt) {
       },
       buildScript: {
         // Target-specific file/dir lists and/or options go here.
-        src: ['*', 'installer/**/*']
+        src: [
+          path.join(paths.distPackageRootPath, '**/*')
+        ]
       }
     },
     execute: {
       findDependency: {
         call: function (grunt, options, async) {
           var done = async();
-          exec('./linuxdeployqt-continuous-x86_64.AppImage '+ paths.packageDataPath + 'dlt_viewer', {cwd : paths.root}, function(err){
+          exec('./linuxdeployqt-continuous-x86_64.AppImage ' + paths.packageDataPath + 'dlt_viewer', {cwd : paths.root}, function(err){
             if(err)
               throw new Error('error not find dependency ');
             done();
@@ -170,15 +160,15 @@ module.exports = function (grunt) {
 						addData.wizardheight = '300';
 					}
 
-          var xmlFile = fs.readFileSync(path.join(paths.configXmlPath, 'config.xml'), 'utf-8');
+          var xmlFile = fs.readFileSync(path.join(paths.configPath, 'config.xml'), 'utf-8');
           var compiled = _.template(xmlFile);
           var addDataXmlFile = compiled(addData);
-          fs.outputFileSync(path.join(paths.configXmlPath, 'config.xml'), addDataXmlFile);
+          fs.outputFileSync(path.join(paths.configPath, 'config.xml'), addDataXmlFile);
 
-          xmlFile = fs.readFileSync(path.join(paths.packageXmlPath, 'package.xml'), 'utf-8');
+          xmlFile = fs.readFileSync(path.join(paths.packageMetaPath, 'package.xml'), 'utf-8');
           compiled = _.template(xmlFile);
           addDataXmlFile = compiled({ releasedate : moment().format("YYYY-MM-DD") });
-          fs.outputFileSync(path.join(paths.packageXmlPath, 'package.xml'), addDataXmlFile);
+          fs.outputFileSync(path.join(paths.packageMetaPath, 'package.xml'), addDataXmlFile);
           done();
         }
       },
@@ -190,16 +180,15 @@ module.exports = function (grunt) {
 
           if (process.platform === 'win32') {
             fileName = fileName + '.exe';
-            buildResultPath = 'build_result/win/' + fileName;
           } else if (process.platform === 'darwin') {
             fileName = fileName + '.app';
-            buildResultPath = 'build_result/darwin/' + fileName;
           } else {
             fileName = fileName + '.run';
-            buildResultPath = 'build_result/linux/' + fileName;
           }
 
-          var srcPath = path.join(paths.installerPath, fileName);
+          buildResultPath = path.join(paths.resultPath, fileName);
+
+          var srcPath = path.join(paths.distPackageRootPath, fileName);
           var destPath = path.join(paths.root, buildResultPath);
 
           fs.move(srcPath, destPath, function (err) {
@@ -219,7 +208,7 @@ module.exports = function (grunt) {
         options:{
           async : false,
           execOptions:{
-            cwd : paths.installerPath
+            cwd : paths.distPackageRootPath
           }
         }
       },
@@ -228,7 +217,7 @@ module.exports = function (grunt) {
         options:{
           async : false,
           execOptions:{
-            cwd : paths.installerPath
+            cwd : paths.distPackageRootPath
           }
         }
       },
@@ -237,7 +226,7 @@ module.exports = function (grunt) {
         options:{
           async : false,
           execOptions:{
-            cwd : paths.installerPath
+            cwd : paths.distPackageRootPath
           }
         }
       },
@@ -262,6 +251,7 @@ module.exports = function (grunt) {
     'copy:qt',
     'execute:addData',
     'shell:windowBuild',
+    'shell:codeSign',
     'execute:moveInstaller'
   ]);
 
