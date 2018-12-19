@@ -1,0 +1,8 @@
+node_modules/
+build_result/
+installer/binarycreator
+installer/installerbase
+installer/installer_build.sh
+installer/config/
+installer/packages/dlt_viewer/data/
+installer/packages/dlt_viewer/meta/package.xml

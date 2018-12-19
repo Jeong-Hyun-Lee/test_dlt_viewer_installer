@@ -38,8 +38,10 @@ module.exports = function (grunt) {
     configXmlPath: 'installer/config/',
     templatePath: 'template/',
     resourcePath: function () {
-      if (process.platform == 'win32') {
+      if (process.platform === 'win32') {
         return 'resource/win/';
+      } else if (process.platform === 'darwin') {
+        return 'resource/darwin/'
       } else {
         return 'resource/linux/';
       }
@@ -69,7 +71,7 @@ module.exports = function (grunt) {
         // for Windows
         path.join(paths.installerPath, '/*.bat'),
         path.join(paths.installerPath, '/*.exe'),
-        // for Linux
+        // for Linux, Mac
         path.join(paths.installerPath, '/*.sh'),
         path.join(paths.installerPath, '/binarycreator'),
         path.join(paths.installerPath, '/installerbase')
@@ -105,7 +107,7 @@ module.exports = function (grunt) {
           },
           {
             expand: true,
-            cwd: process.platform === 'win32' ? path.join(paths.resourcePath, 'data') : path.join(paths.resourcePath, 'data/dlt-viewer/build/release'),
+            cwd: process.platform === 'linux' ? path.join(paths.resourcePath, 'data/dlt-viewer/build/release') : path.join(paths.resourcePath, 'data'),
             src:  ['**/*'],
             dest: paths.packageDataPath
           },
@@ -114,7 +116,11 @@ module.exports = function (grunt) {
             cwd: paths.resourcePath,
             src: process.platform === 'win32' ? ['installer_build.bat', 'installer_codesign.bat', 'binarycreator.exe', 'installerbase.exe'] : ['binarycreator', 'installerbase', 'installer_build.sh'],
             dest: paths.installerPath
-          },
+          }
+        ]
+      },
+      dltDaemon: {
+        files: [
           {
             expand: true,
             cwd: paths.resourcePath,
@@ -128,7 +134,7 @@ module.exports = function (grunt) {
       options: {
         mode: '755'
       },
-      linuxBuild: {
+      buildScript: {
         // Target-specific file/dir lists and/or options go here.
         src: ['*', 'installer/**/*']
       }
@@ -153,7 +159,11 @@ module.exports = function (grunt) {
 					if (process.platform === 'win32') {
 						addData.targetpath = 'C:/Program Files (x86)/DLT Viewer';
 						addData.wizardwidth = '580';
-						addData.wizardheight = '440';
+            addData.wizardheight = '440';
+          } else if (process.platform === 'darwin') {
+            addData.targetpath = '/Applications/DLT Viewer';
+						addData.wizardwidth = '400';
+						addData.wizardheight = '300';
 					} else if (process.platform === 'linux') {
 						addData.targetpath = '/opt/DLT Viewer';
 						addData.wizardwidth = '400';
@@ -181,6 +191,9 @@ module.exports = function (grunt) {
           if (process.platform === 'win32') {
             fileName = fileName + '.exe';
             buildResultPath = 'build_result/win/' + fileName;
+          } else if (process.platform === 'darwin') {
+            fileName = fileName + '.app';
+            buildResultPath = 'build_result/darwin/' + fileName;
           } else {
             fileName = fileName + '.run';
             buildResultPath = 'build_result/linux/' + fileName;
@@ -219,7 +232,7 @@ module.exports = function (grunt) {
           }
         }
       },
-      linuxBuild: {
+      unixBuild: {
         command: './installer_build.sh',
         options:{
           async : false,
@@ -240,6 +253,10 @@ module.exports = function (grunt) {
     }
   });
 
+  /**
+   * 라이센스 문제로 인하여 각 OS별로 installerBase와 binarycreator 파일을
+   * paths.resourcePath에 위치시켜야 한다.
+   */
   grunt.registerTask('win', [
     'clean:qtData',
     'copy:qt',
@@ -250,13 +267,23 @@ module.exports = function (grunt) {
 
   grunt.registerTask('linux', [
     'clean:qtData',
-		'mkdir:all',
+    'mkdir:all',
     'shell:cloneDltViewer',
     'copy:qt',
-    'chmod:linuxBuild',
+    'copy:dltDaemon',
+    'chmod:buildScript',
     'execute:findDependency',
     'execute:addData',
-    'shell:linuxBuild',
+    'shell:unixBuild',
+    'execute:moveInstaller'
+  ]);
+
+  grunt.registerTask('mac', [
+    'clean:qtData',
+    'copy:qt',
+    'chmod:buildScript',
+    'execute:addData',
+    'shell:unixBuild',
     'execute:moveInstaller'
   ]);
 };
