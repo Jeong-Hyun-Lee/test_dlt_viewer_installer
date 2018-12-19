@@ -7,6 +7,7 @@ function Controller()
   installer.setDefaultPageVisible (QInstaller.StartMenuSelection, false);
 
   installer.installationFinished.connect(onInstallationFinished);
+  installer.uninstallationStarted.connect(onUninstallationStarted);
 }
 
 function setIntroPage () {
@@ -30,7 +31,8 @@ function setIntroPage () {
 }
 
 function checkRunningProcess() {
-  var ps = installer.execute('ps', ['-aux'])[0];
+  var options = systemInfo.kernelType === 'linux' ? ['-aux'] :['-e']
+  var ps = installer.execute('ps', options)[0];
   var cnt = 0;
   var arr = ps.split('\n');
   arr.forEach(function (line) {
@@ -54,16 +56,33 @@ function removeAllPage() {
 }
 
 function onInstallationFinished() {
-    installer.setAutomatedPageSwitchEnabled(false);
-    installer.gainAdminRights();
-	installer.execute('mv', ['/opt/DLT Viewer/dlt-daemon', '/usr/bin/'])[0];
+  installer.setAutomatedPageSwitchEnabled(false);
+  installer.gainAdminRights();
+  if (systemInfo.kernelType === 'linux') {
+    installer.execute('mv', ['/opt/DLT Viewer/dlt-daemon', '/usr/bin/'])[0];
+  } else if (systemInfo.kernelType === 'darwin') {
+    installer.execute('cp', ['/Applications/DLT Viewer/libqdlt.1.dylib', '/usr/local/lib'])[0];
+  }
+	
+	installer.dropAdminRights();
+	installer.setAutomatedPageSwitchEnabled(true);
+}
+
+function onUninstallationStarted() {
+  installer.setAutomatedPageSwitchEnabled(false);
+  installer.gainAdminRights();
+  if (systemInfo.kernelType === 'darwin') {
+    installer.execute('rm -rf', ['/usr/local/lib/libqdlt.1.dylib'])[0];
+  }
+	
 	installer.dropAdminRights();
 	installer.setAutomatedPageSwitchEnabled(true);
 }
 
 Controller.prototype.IntroductionPageCallback = function()
 {
-    setIntroPage();
+  QMessageBox.warning("test1", "Check Kernel ", systemInfo.kernelType);
+  setIntroPage();
 }
 
 Controller.prototype.TargetDirectoryPageCallback = function() {}
