@@ -81,7 +81,6 @@ function onUninstallationStarted() {
 
 Controller.prototype.IntroductionPageCallback = function()
 {
-  QMessageBox.warning("test1", "Check Kernel ", systemInfo.kernelType);
   setIntroPage();
 }
 
